@@ -1,0 +1,204 @@
+// SINGLE LINKED LIST – Ticket Management System
+
+class Ticket {
+    int ticketId;
+    String customerName;
+    String issueDescription;
+    String priority;
+
+    Ticket(int id, String name, String issue, String priority) {
+        this.ticketId = id;
+        this.customerName = name;
+        this.issueDescription = issue;
+        this.priority = priority;
+    }
+}
+
+class Node {
+    Ticket ticket;
+    Node next;
+
+    Node(Ticket t) {
+        this.ticket = t;
+        this.next = null;
+    }
+}
+
+class TicketQueue {
+    private Node head;
+    private Node tail;
+
+    // Add ticket based on priority
+    public void addTicket(int id, String name, String issue, String priority) {
+        Node newNode = new Node(new Ticket(id, name, issue, priority));
+
+        if (head == null) {
+            head = tail = newNode;
+            return;
+        }
+
+        if (priority.equals("Critical")) {
+            newNode.next = head;
+            head = newNode;
+        } 
+        else if (priority.equals("High")) {
+            Node current = head;
+            Node prev = null;
+
+            while (current != null && current.ticket.priority.equals("Critical")) {
+                prev = current;
+                current = current.next;
+            }
+
+            if (prev == null) {
+                newNode.next = head;
+                head = newNode;
+            } else {
+                newNode.next = current;
+                prev.next = newNode;
+                if (current == null)
+                    tail = newNode;
+            }
+        } 
+        else {
+            tail.next = newNode;
+            tail = newNode;
+        }
+    }
+
+    // Resolve first ticket
+    public void resolveTicket() {
+        if (head == null) {
+            System.out.println("No tickets to resolve.");
+            return;
+        }
+
+        System.out.println("Resolved Ticket ID: " + head.ticket.ticketId);
+        head = head.next;
+
+        if (head == null)
+            tail = null;
+    }
+
+    // Escalate ticket to front
+    public void escalateTicket(int id) {
+        if (head == null || head.ticket.ticketId == id)
+            return;
+
+        Node prev = null;
+        Node current = head;
+
+        while (current != null && current.ticket.ticketId != id) {
+            prev = current;
+            current = current.next;
+        }
+
+        if (current == null)
+            return;
+
+        prev.next = current.next;
+
+        if (current == tail)
+            tail = prev;
+
+        current.next = head;
+        head = current;
+    }
+
+    // Cancel a ticket
+    public void cancelTicket(int id) {
+        if (head == null) {
+            System.out.println("Ticket not found.");
+            return;
+        }
+
+        if (head.ticket.ticketId == id) {
+            head = head.next;
+            if (head == null)
+                tail = null;
+            System.out.println("Cancelled Ticket ID: " + id);
+            return;
+        }
+
+        Node prev = null;
+        Node current = head;
+
+        while (current != null && current.ticket.ticketId != id) {
+            prev = current;
+            current = current.next;
+        }
+
+        if (current == null) {
+            System.out.println("Ticket not found.");
+            return;
+        }
+
+        prev.next = current.next;
+
+        if (current == tail)
+            tail = prev;
+
+        System.out.println("Cancelled Ticket ID: " + id);
+    }
+
+    // Find ticket position
+    public int findTicket(int id) {
+        Node current = head;
+        int pos = 1;
+
+        while (current != null) {
+            if (current.ticket.ticketId == id)
+                return pos;
+            current = current.next;
+            pos++;
+        }
+        return -1;
+    }
+
+    // Display tickets
+    public void listTickets() {
+        if (head == null) {
+            System.out.println("No tickets in queue.");
+            return;
+        }
+
+        Node current = head;
+        while (current != null) {
+            Ticket t = current.ticket;
+            System.out.println(
+                "ID: " + t.ticketId +
+                ", Name: " + t.customerName +
+                ", Issue: " + t.issueDescription +
+                ", Priority: " + t.priority
+            );
+            current = current.next;
+        }
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+
+        TicketQueue queue = new TicketQueue();
+
+        queue.addTicket(101, "Abirami", "Login issue", "Normal");
+        queue.addTicket(102, "Hari", "Payment failed", "High");
+        queue.addTicket(103, "Nila", "System crash", "Critical");
+
+        queue.listTickets();
+
+        System.out.println("\nEscalating Ticket 101...");
+        queue.escalateTicket(101);
+        queue.listTickets();
+
+        System.out.println("\nResolving Ticket...");
+        queue.resolveTicket();
+        queue.listTickets();
+
+        System.out.println("\nTicket Position of 102: " + queue.findTicket(102));
+
+        System.out.println("\nCancelling Ticket 102...");
+        queue.cancelTicket(102);
+        queue.listTickets();
+    }
+}
